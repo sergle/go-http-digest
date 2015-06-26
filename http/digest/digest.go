@@ -44,11 +44,13 @@
 package digest
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -238,6 +240,12 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req2.Header = make(http.Header)
 	for k, s := range req.Header {
 		req2.Header[k] = s
+	}
+	// copy buf to resend it
+	if req.Body != nil {
+		buf, _ := ioutil.ReadAll(req.Body)
+		req.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+		req2.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
 	}
 
 	// Make a request to get the 401 that contains the challenge.
