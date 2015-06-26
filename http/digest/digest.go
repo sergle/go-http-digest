@@ -266,6 +266,15 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return resp, err
 	}
 
+	// close response body to avoid goroutines leak
+	if resp.Body != nil {
+		resp.Body.Close()
+	}
+	// not sure about request body, but close it as well
+	if req.Body != nil {
+		req.Body.Close()
+	}
+
 	// Make authenticated request.
 	req2.Header.Set("Authorization", auth)
 	return t.Transport.RoundTrip(req2)
